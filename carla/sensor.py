@@ -173,7 +173,7 @@ class Image(SensorData):
 
     def save_to_disk(self, filename):
         """Save this image to disk (requires PIL installed)."""
-        filename = _append_extension(filename, '.jpg')  #Harjap
+        filename = _append_extension(filename, '.png') 
 
         try:
             from PIL import Image as PImage

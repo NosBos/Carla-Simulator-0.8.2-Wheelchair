@@ -87,16 +87,7 @@ def make_carla_settings(args):
     camera0.set_position(2.0, 0.0, 1.4)
     camera0.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera0)
-    camera1 = sensor.Camera('CameraDepth', PostProcessing='Depth')
-    camera1.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
-    camera1.set_position(2.0, 0.0, 1.4)
-    camera1.set_rotation(0.0, 0.0, 0.0)
-    settings.add_sensor(camera1)
-    camera2 = sensor.Camera('CameraSemSeg', PostProcessing='SemanticSegmentation')
-    camera2.set_image_size(MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
-    camera2.set_position(2.0, 0.0, 1.4)
-    camera2.set_rotation(0.0, 0.0, 0.0)
-    settings.add_sensor(camera2)
+
     if args.lidar:
         lidar = sensor.Lidar('Lidar32')
         lidar.set_position(0, 0, 2.5)
@@ -198,9 +189,6 @@ class CarlaGame(object):
         measurements, sensor_data = self.client.read_data()
 
         self._main_image = sensor_data.get('CameraRGB', None)
-        self._mini_view_image1 = sensor_data.get('CameraDepth', None)
-        self._mini_view_image2 = sensor_data.get('CameraSemSeg', None)
-        self._lidar_measurement = sensor_data.get('Lidar32', None)
 
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 0.5:
@@ -299,19 +287,7 @@ class CarlaGame(object):
             surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
             self._display.blit(surface, (0, 0))
 
-        if self._mini_view_image1 is not None:
-            array = image_converter.depth_to_logarithmic_grayscale(self._mini_view_image1)
-            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-            self._display.blit(surface, (gap_x, mini_image_y))
-
-        if self._mini_view_image2 is not None:
-            array = image_converter.labels_to_cityscapes_palette(
-                self._mini_view_image2)
-            surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-
-            self._display.blit(
-                surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
-
+        
         if self._lidar_measurement is not None:
             lidar_data = np.array(self._lidar_measurement.data[:, :2])
             lidar_data *= 2.0
