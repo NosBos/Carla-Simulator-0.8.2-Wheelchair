@@ -78,6 +78,7 @@ MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
 
 frame = 0
+timestamp = float(0)
 
 #Create data.csv file
 with open('data.csv', 'w',newline='') as f:
@@ -199,6 +200,8 @@ class CarlaGame(object):
     def _on_loop(self):
 
         global frame
+        global timestamp
+
         self._timer.tick()
 
         measurements, sensor_data = self.client.read_data()
@@ -210,6 +213,8 @@ class CarlaGame(object):
         # Print measurements every chosen amount of time.
         if self._timer.elapsed_seconds_since_lap() > 0.5:
             
+            timestamp = timestamp + 0.5
+
             #Save Image Data from every 0.5 seconds into folder "out"
             for name, measurement in sensor_data.items():
                     frame = frame + 1 
@@ -217,7 +222,7 @@ class CarlaGame(object):
           
                     measurement.save_to_disk(filename)    
 
-            row = [frame,0,control.steer]
+            row = [frame,timestamp,control.steer]
 
             with open('data.csv', 'a') as csvFile:
                 writer = csv.writer(csvFile)
