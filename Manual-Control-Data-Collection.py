@@ -57,6 +57,12 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
+#Controller Support
+pygame.init()
+pygame.joystick.init()
+joy = pygame.joystick.Joystick(0)
+joy.init()
+
 from carla import image_converter
 from carla import sensor
 from carla.client import make_carla_client, VehicleControl
@@ -77,7 +83,7 @@ def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
     settings = CarlaSettings()
     settings.set(
-        SynchronousMode=False,
+        SynchronousMode=True,
         SendNonPlayerAgentsInfo=True,
         NumberOfVehicles=15,
         NumberOfPedestrians=30,
@@ -194,7 +200,7 @@ class CarlaGame(object):
 
         control = self._get_keyboard_control(pygame.key.get_pressed())
 
-        # Print measurements every second.
+        # Print measurements every chosen amount of time.
         if self._timer.elapsed_seconds_since_lap() > 0.5:
             
             #Save Image Data from every 0.5 seconds into folder "out"
@@ -237,14 +243,14 @@ class CarlaGame(object):
         if keys[K_r]:
             return None
         control = VehicleControl()
-        if keys[K_LEFT] or keys[K_a]:
-            control.steer = -1.0
-        if keys[K_RIGHT] or keys[K_d]:
-            control.steer = 1.0
-        if keys[K_UP] or keys[K_w]:
-            control.throttle = 1.0
-        if keys[K_DOWN] or keys[K_s]:
-            control.brake = 1.0
+
+        #get_axis values may differ depending on controller
+        control.steer = joy.get_axis(3)
+
+        control.throttle = (joy.get_axis(5) + 1) / 2
+
+        control.brake = (joy.get_axis(2) + 1) / 2
+
         if keys[K_SPACE]:
             control.hand_brake = True
         if keys[K_q]:
