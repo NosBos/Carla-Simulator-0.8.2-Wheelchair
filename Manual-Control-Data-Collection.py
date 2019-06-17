@@ -240,6 +240,9 @@ class CarlaGame(object):
         Return a VehicleControl message based on the pressed keys. Return None
         if a new episode was requested.
         """
+
+        pygame.event.pump()
+
         if keys[K_r]:
             return None
         control = VehicleControl()
