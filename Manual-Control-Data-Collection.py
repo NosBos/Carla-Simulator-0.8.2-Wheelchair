@@ -69,6 +69,7 @@ WINDOW_HEIGHT = 600
 MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
 
+frame = 0
 
 def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
@@ -190,6 +191,8 @@ class CarlaGame(object):
         self._is_on_reverse = False
 
     def _on_loop(self):
+
+        global frame
         self._timer.tick()
 
         measurements, sensor_data = self.client.read_data()
@@ -200,31 +203,19 @@ class CarlaGame(object):
         self._lidar_measurement = sensor_data.get('Lidar32', None)
 
         # Print measurements every second.
-        if self._timer.elapsed_seconds_since_lap() > 1.0:
-            if self._city_name is not None:
-                # Function to get car position on map.
-                map_position = self._map.convert_to_pixel([
-                    measurements.player_measurements.transform.location.x,
-                    measurements.player_measurements.transform.location.y,
-                    measurements.player_measurements.transform.location.z])
-                # Function to get orientation of the road car is in.
-                lane_orientation = self._map.get_lane_orientation([
-                    measurements.player_measurements.transform.location.x,
-                    measurements.player_measurements.transform.location.y,
-                    measurements.player_measurements.transform.location.z])
-
-                self._print_player_measurements_map(
-                    measurements.player_measurements,
-                    map_position,
-                    lane_orientation)
-            else:
-                self._print_player_measurements(measurements.player_measurements)
-
-            # Plot position on the map as well.
+        if self._timer.elapsed_seconds_since_lap() > 0.5:
+            
+            #Save Image Data from every 0.5 seconds into folder "out"
+            for name, measurement in sensor_data.items():
+                    frame = frame + 1 
+                    filename = '_out/episode_{}'.format(frame)
+          
+                    measurement.save_to_disk(filename)    
 
             self._timer.lap()
 
         control = self._get_keyboard_control(pygame.key.get_pressed())
+
         # Set the player position
         if self._city_name is not None:
             self._position = self._map.convert_to_pixel([
