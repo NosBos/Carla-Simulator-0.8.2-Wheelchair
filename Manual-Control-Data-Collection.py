@@ -79,6 +79,13 @@ MINI_WINDOW_HEIGHT = 180
 
 frame = 0
 
+#Create data.csv file
+with open('data.csv', 'w',newline='') as f:
+    w = csv.writer(f)
+    w.writerow(['Frame', 'Timestamp', 'Steering Angle']) 
+f.close()
+
+
 def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
     settings = CarlaSettings()
@@ -210,7 +217,7 @@ class CarlaGame(object):
           
                     measurement.save_to_disk(filename)    
 
-            row = [frame,control.steer]
+            row = [frame,0,control.steer]
 
             with open('data.csv', 'a') as csvFile:
                 writer = csv.writer(csvFile)
