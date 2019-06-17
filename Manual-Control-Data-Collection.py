@@ -23,6 +23,8 @@ Use ARROWS or WASD keys for control.
 
     R            : restart level
 
+    L            : toggle data collection
+
 STARTING in a moment...
 """
 
@@ -50,6 +52,8 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_w
+    from pygame.locals import K_l
+    from pygame.locals import K_k
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -153,6 +157,7 @@ class CarlaGame(object):
         self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
+        self._data_collection = False
         self._city_name = args.map_name
         self._map = CarlaMap(self._city_name, 0.1643, 50.0) if self._city_name is not None else None
         self._map_shape = self._map.map_image.shape if self._city_name is not None else None
@@ -209,7 +214,9 @@ class CarlaGame(object):
 
         self._main_image = sensor_data.get('CameraRGB', None)
 
+
         control = self._get_keyboard_control(pygame.key.get_pressed())
+
 
         speed = Decimal(measurements.player_measurements.forward_speed * 3.6)
 
@@ -220,21 +227,24 @@ class CarlaGame(object):
             
             timestamp = timestamp + 0.1
 
-            #Save Image Data from every 0.5 seconds into folder "out"
-            for name, measurement in sensor_data.items():
+            #Save Image Data from every # seconds into folder "out"
+
+            if self._data_collection:
+
+                for name, measurement in sensor_data.items():
                     frame = frame + 1 
                     filename = '_out/episode_{}'.format(frame)
           
                     measurement.save_to_disk(filename)    
 
-            row = [frame,timestamp, round(steer,3), round(measurements.player_measurements.forward_speed * 3.6, 3)]
+                row = [frame,timestamp, round(steer,3), round(measurements.player_measurements.forward_speed * 3.6, 3)]
 
-            with open('data.csv', 'a') as csvFile:
-                writer = csv.writer(csvFile)
-                writer.writerow(row)
-            csvFile.close()
+                with open('data.csv', 'a') as csvFile:
+                    writer = csv.writer(csvFile)
+                    writer.writerow(row)
+                csvFile.close()
 
-            self._timer.lap()
+                self._timer.lap()
 
 
         # Set the player position
@@ -271,6 +281,8 @@ class CarlaGame(object):
 
         control.brake = (joy.get_axis(2) + 1) / 2
 
+        if keys[K_l]:
+            self._data_collection = not self._data_collection
         if keys[K_SPACE]:
             control.hand_brake = True
         if keys[K_q]:
