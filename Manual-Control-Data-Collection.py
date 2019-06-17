@@ -33,6 +33,8 @@ import logging
 import random
 import time
 
+import csv
+
 try:
     import pygame
     from pygame.locals import K_DOWN
@@ -190,6 +192,8 @@ class CarlaGame(object):
 
         self._main_image = sensor_data.get('CameraRGB', None)
 
+        control = self._get_keyboard_control(pygame.key.get_pressed())
+
         # Print measurements every second.
         if self._timer.elapsed_seconds_since_lap() > 0.5:
             
@@ -200,9 +204,15 @@ class CarlaGame(object):
           
                     measurement.save_to_disk(filename)    
 
+            row = [frame,control.steer]
+
+            with open('data.csv', 'a') as csvFile:
+                writer = csv.writer(csvFile)
+                writer.writerow(row)
+            csvFile.close()
+
             self._timer.lap()
 
-        control = self._get_keyboard_control(pygame.key.get_pressed())
 
         # Set the player position
         if self._city_name is not None:
