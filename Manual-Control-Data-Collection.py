@@ -27,6 +27,7 @@ STARTING in a moment...
 """
 
 from __future__ import print_function
+from decimal import Decimal
 
 import argparse
 import logging
@@ -83,7 +84,7 @@ timestamp = float(0)
 #Create data.csv file
 with open('data.csv', 'w',newline='') as f:
     w = csv.writer(f)
-    w.writerow(['Frame', 'Timestamp', 'Steering Angle']) 
+    w.writerow(['Frame', 'Timestamp', 'Steering Angle', 'Speed']) 
 f.close()
 
 
@@ -210,10 +211,14 @@ class CarlaGame(object):
 
         control = self._get_keyboard_control(pygame.key.get_pressed())
 
+        speed = Decimal(measurements.player_measurements.forward_speed * 3.6)
+
+        steer = Decimal(control.steer)
+
         # Print measurements every chosen amount of time.
-        if self._timer.elapsed_seconds_since_lap() > 0.5:
+        if self._timer.elapsed_seconds_since_lap() > 0.1:
             
-            timestamp = timestamp + 0.5
+            timestamp = timestamp + 0.1
 
             #Save Image Data from every 0.5 seconds into folder "out"
             for name, measurement in sensor_data.items():
@@ -222,7 +227,7 @@ class CarlaGame(object):
           
                     measurement.save_to_disk(filename)    
 
-            row = [frame,timestamp,control.steer]
+            row = [frame,timestamp, round(steer,3), round(measurements.player_measurements.forward_speed * 3.6, 3)]
 
             with open('data.csv', 'a') as csvFile:
                 writer = csv.writer(csvFile)
