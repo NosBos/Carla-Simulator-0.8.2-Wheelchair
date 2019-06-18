@@ -199,7 +199,15 @@ class CarlaGame(object):
         self._carla_settings.randomize_weather()
         scene = self.client.load_settings(self._carla_settings)
         number_of_player_starts = len(scene.player_start_spots)
-        player_start = np.random.randint(number_of_player_starts)
+
+        start_choice = input("Enter value of starting postion (0-152) or enter 'p' for random: ")
+        if start_choice == 'p':
+            player_start = np.random.randint(number_of_player_starts)
+        else:
+            player_start = int(start_choice)
+
+        print("Your starting postion is ", player_start)
+
         print('Starting new episode...')
         self.client.start_episode(player_start)
         self._timer = Timer()
