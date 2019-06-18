@@ -82,8 +82,6 @@ WINDOW_HEIGHT = 600
 MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
 
-frame = 0
-timestamp = float(0)
 
 #Create data.csv file
 with open('data.csv', 'w',newline='') as f:
@@ -157,13 +155,17 @@ class CarlaGame(object):
         self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
-        self._data_collection = False
         self._city_name = args.map_name
         self._map = CarlaMap(self._city_name, 0.1643, 50.0) if self._city_name is not None else None
         self._map_shape = self._map.map_image.shape if self._city_name is not None else None
         self._map_view = self._map.get_map(WINDOW_HEIGHT) if self._city_name is not None else None
         self._position = None
         self._agent_positions = None
+          
+        #Wheelchair addition
+        self._data_collection = False
+        self._time_stamp = float(0)
+        self._frame = 0
 
     def execute(self):
         """Launch the PyGame."""
@@ -205,8 +207,6 @@ class CarlaGame(object):
 
     def _on_loop(self):
 
-        global frame
-        global timestamp
 
         self._timer.tick()
 
@@ -225,19 +225,19 @@ class CarlaGame(object):
         # Print measurements every chosen amount of time.
         if self._timer.elapsed_seconds_since_lap() > 0.1:
             
-            timestamp = timestamp + 0.1
+            self._time_stamp = self._time_stamp + 0.1
 
             #Save Image Data from every # seconds into folder "out"
 
             if self._data_collection:
 
                 for name, measurement in sensor_data.items():
-                    frame = frame + 1 
-                    filename = '_out/episode_{}'.format(frame)
+                    self._frame = self._frame + 1 
+                    filename = '_out/episode_{}'.format(self._frame)
           
                     measurement.save_to_disk(filename)    
 
-                row = [frame,timestamp, round(steer,3), round(measurements.player_measurements.forward_speed * 3.6, 3)]
+                row = [self._frame,self._time_stamp, round(steer,3), round(measurements.player_measurements.forward_speed * 3.6, 3)]
 
                 with open('data.csv', 'a') as csvFile:
                     writer = csv.writer(csvFile)
@@ -283,6 +283,12 @@ class CarlaGame(object):
 
         if keys[K_l]:
             self._data_collection = not self._data_collection
+
+            if self._data_collection:
+                print("Data Collection ON")
+            else:
+                print("Data Collection OFF")
+
         if keys[K_SPACE]:
             control.hand_brake = True
         if keys[K_q]:
