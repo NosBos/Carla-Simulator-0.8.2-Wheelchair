@@ -37,6 +37,7 @@ import random
 import time
 
 import csv
+import pandas as pd
 
 try:
     import pygame
@@ -53,7 +54,10 @@ try:
     from pygame.locals import K_s
     from pygame.locals import K_w
     from pygame.locals import K_l
-    from pygame.locals import K_k
+    from pygame.locals import K_b
+    from pygame.locals import K_n
+    from pygame.locals import K_m
+
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -84,10 +88,15 @@ MINI_WINDOW_HEIGHT = 180
 
 
 #Create data.csv file
+
 with open('data.csv', 'w',newline='') as f:
     w = csv.writer(f)
-    w.writerow(['Frame', 'Timestamp', 'Steering Angle', 'Speed']) 
+    w.writerow(['Frame', 'Timestamp', 'Steering Angle', 'Speed', 'Throttle']) 
 f.close()
+
+#opening replay csv file
+replay = pd.read_csv("replay.csv")
+
 
 
 def make_carla_settings(args):
@@ -166,6 +175,8 @@ class CarlaGame(object):
         self._data_collection = False
         self._time_stamp = float(0)
         self._frame = 0
+        self._replay_frame = 0
+        self._input_control = "Manual"
 
     def execute(self):
         """Launch the PyGame."""
@@ -230,6 +241,8 @@ class CarlaGame(object):
 
         steer = Decimal(control.steer)
 
+        throttle = Decimal(control.throttle)
+
         # Print measurements every chosen amount of time.
         if self._timer.elapsed_seconds_since_lap() > 0.1:
             
@@ -245,7 +258,7 @@ class CarlaGame(object):
           
                     measurement.save_to_disk(filename)    
 
-                row = [self._frame,self._time_stamp, round(steer,3), round(measurements.player_measurements.forward_speed * 3.6, 3)]
+                row = [self._frame,self._time_stamp, round(steer,3), round(speed, 3), round(throttle, 3)]
 
                 with open('data.csv', 'a') as csvFile:
                     writer = csv.writer(csvFile)
@@ -282,12 +295,29 @@ class CarlaGame(object):
             return None
         control = VehicleControl()
 
-        #get_axis values may differ depending on controller
-        control.steer = joy.get_axis(3)
 
-        control.throttle = (joy.get_axis(5) + 1) / 2
+        if self._input_control == "Manual":
 
-        control.brake = (joy.get_axis(2) + 1) / 2
+            #get_axis values may differ depending on controller
+            control.steer = joy.get_axis(3)
+
+            control.throttle = (joy.get_axis(5) + 1) / 2
+
+            control.brake = (joy.get_axis(2) + 1) / 2
+
+        elif self._input_control == "Replay":
+
+            time.sleep(0.1)
+
+            #read replay.csv file using pandas
+            self._replay_frame += 1
+     
+            control.steer = replay.iloc[self._replay_frame,2]
+            control.throttle = replay.iloc[self._replay_frame,4]
+
+        else:
+            #autonomous control
+            pass
 
         if keys[K_l]:
             self._data_collection = not self._data_collection
@@ -297,12 +327,28 @@ class CarlaGame(object):
             else:
                 print("Data Collection OFF")
 
+
+        if keys[K_m]:
+            print("Manual Control")
+            self._input_control = "Manual"
+
+        if keys[K_n]:
+            print("AI Control")
+            self._input_control = "AI"
+
+        if keys[K_b]:
+            print("Replay Control")
+            self._input_control = "Replay"
+
         if keys[K_SPACE]:
             control.hand_brake = True
+
         if keys[K_q]:
             self._is_on_reverse = not self._is_on_reverse
+
         if keys[K_p]:
             self._enable_autopilot = not self._enable_autopilot
+
         control.reverse = self._is_on_reverse
         return control
 
