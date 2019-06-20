@@ -175,7 +175,7 @@ class CarlaGame(object):
         self._data_collection = False
         self._time_stamp = float(0)
         self._frame = 0
-        self._replay_frame = 0
+        self._replay_frame = 1
         self._input_control = "Manual"
 
     def execute(self):
@@ -248,16 +248,21 @@ class CarlaGame(object):
             
             self._time_stamp = self._time_stamp + 0.1
 
+            if self._input_control == "Replay":
+
+                self._replay_frame = self._replay_frame + 1
+
             #Save Image Data from every # seconds into folder "out"
 
             if self._data_collection:
-
+                self._frame = self._frame + 1 
+                
                 for name, measurement in sensor_data.items():
                     self._frame = self._frame + 1 
                     filename = '_out/episode_{}'.format(self._frame)
           
                     measurement.save_to_disk(filename)    
-
+                
                 row = [self._frame,self._time_stamp, round(steer,3), round(speed, 3), round(throttle, 3)]
 
                 with open('data.csv', 'a') as csvFile:
@@ -265,7 +270,7 @@ class CarlaGame(object):
                     writer.writerow(row)
                 csvFile.close()
 
-                self._timer.lap()
+            self._timer.lap()
 
 
         # Set the player position
@@ -289,7 +294,6 @@ class CarlaGame(object):
         if a new episode was requested.
         """
 
-        pygame.event.pump()
 
         if keys[K_r]:
             return None
@@ -297,6 +301,8 @@ class CarlaGame(object):
 
 
         if self._input_control == "Manual":
+
+            pygame.event.pump()
 
             #get_axis values may differ depending on controller
             control.steer = joy.get_axis(3)
@@ -307,10 +313,9 @@ class CarlaGame(object):
 
         elif self._input_control == "Replay":
 
-            time.sleep(0.1)
 
-            #read replay.csv file using pandas
-            self._replay_frame += 1
+            #read replay.csv file using
+            print(self._replay_frame)
      
             control.steer = replay.iloc[self._replay_frame,2]
             control.throttle = replay.iloc[self._replay_frame,4]
