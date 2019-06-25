@@ -80,6 +80,15 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
 
+#import prediction file
+from real_time_prediction import RealTimePrediction
+
+#Initializing prediction object
+model_name = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model.json'
+model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights.h5'
+
+p = RealTimePrediction(model_name, model_weights)
+
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -177,6 +186,7 @@ class CarlaGame(object):
         self._frame = 0
         self._replay_frame = 1
         self._input_control = "Manual"
+        self._AI_steer = 0
 
     def execute(self):
         """Launch the PyGame."""
@@ -258,17 +268,22 @@ class CarlaGame(object):
                 self._frame = self._frame + 1 
                 
                 for name, measurement in sensor_data.items():
-                    self._frame = self._frame + 1 
                     filename = '_out/episode_{}'.format(self._frame)
-          
+              
                     measurement.save_to_disk(filename)    
                 
-                row = [self._frame,self._time_stamp, round(steer,3), round(speed, 3), round(throttle, 3)]
+                row = ["_out/episode_" + str(self._frame), self._time_stamp, round(steer,3), round(speed, 3), round(throttle, 3)]
 
                 with open('data.csv', 'a') as csvFile:
                     writer = csv.writer(csvFile)
                     writer.writerow(row)
                 csvFile.close()
+
+            #get steering direction from AI
+            if self._input_control == "AI":
+                for name, measurement in sensor_data.items():
+                    self._AI_steer = p.do_predict(measurement.data)
+                
 
             self._timer.lap()
 
@@ -321,8 +336,9 @@ class CarlaGame(object):
             control.throttle = replay.iloc[self._replay_frame,4]
 
         else:
-            #autonomous control
-            pass
+            control.steer = self._AI_steer
+            control.throttle = 0.3
+          
 
         if keys[K_l]:
             self._data_collection = not self._data_collection
