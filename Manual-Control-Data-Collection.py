@@ -87,6 +87,7 @@ from real_time_prediction import RealTimePrediction
 model_name = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model.json'
 model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights.h5'
 
+#Initalizing the model object
 p = RealTimePrediction(model_name, model_weights)
 
 
@@ -96,35 +97,37 @@ MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
 
 
-#Create data.csv file
-
+#Create data.csv file / overwrites previously recorded data
 with open('data.csv', 'w',newline='') as f:
     w = csv.writer(f)
     w.writerow(['Frame', 'Timestamp', 'Steering Angle', 'Speed', 'Throttle']) 
 f.close()
 
-#opening replay csv file
-replay = pd.read_csv("replay.csv")
 
+#opening replay csv file- uncomment if replay needed
+#replay = pd.read_csv("replay.csv")
 
-
+#Carla setting are set
 def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
     settings = CarlaSettings()
     settings.set(
         SynchronousMode=True,
         SendNonPlayerAgentsInfo=True,
-        NumberOfVehicles=15,
-        NumberOfPedestrians=30,
+        NumberOfVehicles=0,
+        NumberOfPedestrians=0,
         WeatherId=random.choice([1, 3, 7, 8, 14]),
         QualityLevel=args.quality_level)
     settings.randomize_seeds()
+
+    #Camera type and placement is chosen
     camera0 = sensor.Camera('CameraRGB')
     camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
     camera0.set_position(2.0, 0.0, 1.4)
     camera0.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera0)
 
+    #if lidar is chosen, placement of it
     if args.lidar:
         lidar = sensor.Lidar('Lidar32')
         lidar.set_position(0, 0, 2.5)
@@ -139,7 +142,7 @@ def make_carla_settings(args):
         settings.add_sensor(lidar)
     return settings
 
-
+#class of different times values which are kept track of
 class Timer(object):
     def __init__(self):
         self.step = 0
@@ -221,6 +224,7 @@ class CarlaGame(object):
         scene = self.client.load_settings(self._carla_settings)
         number_of_player_starts = len(scene.player_start_spots)
 
+        #allows user to decide starting position for replay
         start_choice = input("Enter value of starting postion (0-152) or enter 'p' for random: ")
         if start_choice == 'p':
             player_start = np.random.randint(number_of_player_starts)
@@ -236,34 +240,35 @@ class CarlaGame(object):
 
     def _on_loop(self):
 
-
+        #loop takes place every tick
         self._timer.tick()
-
+        
+        #extracts data from simulator
         measurements, sensor_data = self.client.read_data()
 
+        #image for pygame is extracted
         self._main_image = sensor_data.get('CameraRGB', None)
 
-
+        #control is given by calling _get_keyboard_control function
         control = self._get_keyboard_control(pygame.key.get_pressed())
-
-
+        
         speed = Decimal(measurements.player_measurements.forward_speed * 3.6)
 
+        #steer and throttle values extracted from control
         steer = Decimal(control.steer)
-
         throttle = Decimal(control.throttle)
 
         # Print measurements every chosen amount of time.
-        if self._timer.elapsed_seconds_since_lap() > 0.1:
-            
-            self._time_stamp = self._time_stamp + 0.1
+        if self._timer.elapsed_seconds_since_lap() > 0.033:
+            #timestamp keeps track of how much time has elasped
+            self._time_stamp = self._time_stamp + 0.033
 
+            #If input_control is replay, keeps track of frames read
             if self._input_control == "Replay":
 
                 self._replay_frame = self._replay_frame + 1
 
             #Save Image Data from every # seconds into folder "out"
-
             if self._data_collection:
                 self._frame = self._frame + 1 
                 
@@ -272,8 +277,10 @@ class CarlaGame(object):
               
                     measurement.save_to_disk(filename)    
                 
-                row = ["_out/episode_" + str(self._frame), self._time_stamp, round(steer,3), round(speed, 3), round(throttle, 3)]
+                #row created for saving data to csv
+                row = ["_out/episode_" + str(self._frame), self._time_stamp, round(steer,7), round(speed, 3), round(throttle, 3)]
 
+                #csv file written to
                 with open('data.csv', 'a') as csvFile:
                     writer = csv.writer(csvFile)
                     writer.writerow(row)
@@ -282,9 +289,10 @@ class CarlaGame(object):
             #get steering direction from AI
             if self._input_control == "AI":
                 for name, measurement in sensor_data.items():
+                    #call do_predict, gets steer values from real_time_prediction.py
                     self._AI_steer = p.do_predict(measurement.data)
                 
-
+            #lap time is reset to allow this if statment to be called on accurate intervals
             self._timer.lap()
 
 
@@ -309,35 +317,38 @@ class CarlaGame(object):
         if a new episode was requested.
         """
 
-
+        #returns NONE to close simulator
         if keys[K_r]:
             return None
+
+        #control is set to its accurate type
         control = VehicleControl()
 
-
+        #input set to manual
         if self._input_control == "Manual":
-
+            #updates and checks for input from controller
             pygame.event.pump()
 
             #get_axis values may differ depending on controller
+            #values weighted to be used on carla
             control.steer = joy.get_axis(3)
 
             control.throttle = (joy.get_axis(5) + 1) / 2
 
             control.brake = (joy.get_axis(2) + 1) / 2
 
+        #replay of previously recorded data
         elif self._input_control == "Replay":
 
-
-            #read replay.csv file using
-            print(self._replay_frame)
-     
+            #read replay.csv file, _replay_frame values gives us correct row
             control.steer = replay.iloc[self._replay_frame,2]
             control.throttle = replay.iloc[self._replay_frame,4]
 
+        #input set to autonomous, steer values from model
         else:
             control.steer = self._AI_steer
-            control.throttle = 0.3
+            control.throttle = 0.5
+            print(control.steer)
           
 
         if keys[K_l]:
@@ -348,6 +359,7 @@ class CarlaGame(object):
             else:
                 print("Data Collection OFF")
 
+        #Check for keyboard commands to change input control device
 
         if keys[K_m]:
             print("Manual Control")
