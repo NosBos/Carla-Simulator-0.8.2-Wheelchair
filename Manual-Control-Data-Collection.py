@@ -85,7 +85,7 @@ from real_time_prediction import RealTimePrediction
 
 #Initializing prediction object
 model_name = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model.json'
-model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights.h5'
+model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights_15mins.h5'
 
 #Initalizing the model object
 p = RealTimePrediction(model_name, model_weights)
@@ -358,6 +358,7 @@ class CarlaGame(object):
                 print("Data Collection ON")
             else:
                 print("Data Collection OFF")
+            time.sleep(0.05)
 
         #Check for keyboard commands to change input control device
 
