@@ -190,6 +190,7 @@ class CarlaGame(object):
         self._replay_frame = 1
         self._input_control = "Manual"
         self._AI_steer = 0
+        self._player_start = args.start
 
     def execute(self):
         """Launch the PyGame."""
@@ -225,11 +226,7 @@ class CarlaGame(object):
         number_of_player_starts = len(scene.player_start_spots)
 
         #allows user to decide starting position for replay
-        start_choice = input("Enter value of starting postion (0-152) or enter 'p' for random: ")
-        if start_choice == 'p':
-            player_start = np.random.randint(number_of_player_starts)
-        else:
-            player_start = int(start_choice)
+        player_start = self._player_start
 
         print("Your starting postion is ", player_start)
 
@@ -513,6 +510,11 @@ def main():
         default=None,
         help='plot the map of the current city (needs to match active map in '
              'server, options: Town01 or Town02)')
+    argparser.add_argument(
+        '-s', '--start',
+        default=1,
+        type=int,
+        help='Choose the starting postion of the simulator 1-152 (default: 1)')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
