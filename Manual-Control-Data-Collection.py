@@ -12,18 +12,27 @@
 """
 Welcome to CARLA manual control.
 
-Use ARROWS or WASD keys for control.
+Use Xbox Controller for control.
 
-    W            : throttle
-    S            : brake
-    AD           : steer
-    Q            : toggle reverse
-    Space        : hand-brake
-    P            : toggle autopilot
+    RT on Xbox Controller                 : throttle
+    LT on Xbox Controller                 : brake
+    Right Joystick on Xbox Controller     : steer
 
-    R            : restart level
+    Q                                     : toggle reverse
 
-    L            : toggle data collection
+    Space                                 : hand-brake
+
+    P                                     : toggle autopilot
+
+    M                                     : manual control
+    B                                     : autonomous model control
+    N                                     : replay control
+
+    R                                     : restart level
+    C                                     : change weather
+
+    L                                     : toggle data collection
+
 
 STARTING in a moment...
 """
