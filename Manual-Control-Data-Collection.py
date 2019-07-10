@@ -25,8 +25,8 @@ Use Xbox Controller for control.
     P                                     : toggle autopilot
 
     M                                     : manual control
-    B                                     : autonomous model control
-    N                                     : replay control
+    N                                     : autonomous model control
+    B                                     : replay control
 
     R                                     : restart level
     C                                     : change weather
@@ -47,6 +47,7 @@ import time
 
 import csv
 import pandas as pd
+import cv2
 
 try:
     import pygame
@@ -92,9 +93,9 @@ from carla.util import print_over_same_line
 #import prediction file
 from real_time_prediction import RealTimePrediction
 
-#Initializing prediction object
+#Add file paths for the .h5 model and .json model weights
 model_name = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model.json'
-model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights_15mins.h5'
+model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights.h5'
 
 #Initalizing the model object
 p = RealTimePrediction(model_name, model_weights)
@@ -197,6 +198,8 @@ class CarlaGame(object):
         self._time_stamp = float(0)
         self._frame = 0
         self._replay_frame = 1
+        self._AI_frame = 0        
+
         self._input_control = "Manual"
         self._AI_steer = 0
         self._player_start = args.start
@@ -294,10 +297,23 @@ class CarlaGame(object):
 
             #get steering direction from AI
             if self._input_control == "AI":
+
                 for name, measurement in sensor_data.items():
+ 
+                    #numpy array from simulator is BGR color-space, converting to RGB
+                    rgb_img = cv2.cvtColor(measurement.data, cv2.COLOR_BGR2RGB)
+
                     #call do_predict, gets steer values from real_time_prediction.py
-                    self._AI_steer = p.do_predict(measurement.data)
+                    self._AI_steer = p.do_predict(rgb_img)
+
+
+                    #Check to see what numpy array is being sent to the model
+
+                    cv2.imwrite('Auto/episode{}.jpg'.format(self._AI_frame),rgb_img)
                 
+                self._AI_frame += 1
+
+
             #lap time is reset to allow this if statment to be called on accurate intervals
             self._timer.lap()
 
@@ -385,6 +401,7 @@ class CarlaGame(object):
 
         if keys[K_q]:
             self._is_on_reverse = not self._is_on_reverse
+            time.sleep(0.05)
 
         if keys[K_p]:
             self._enable_autopilot = not self._enable_autopilot
