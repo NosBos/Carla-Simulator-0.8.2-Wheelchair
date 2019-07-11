@@ -14,7 +14,7 @@ class RealTimePrediction:
         self.predicted_value = None
         self.model = self.load_model()
         self.current_image = None
-        self._AI_frame = 0
+
         print(type(self.model))
          
     # Load json file, create the model and load the weights
@@ -29,7 +29,7 @@ class RealTimePrediction:
     
     # Load data which we want to do prediction on it
     def read_data(self, img):
-        self._AI_frame += 1
+
         resize_img = cv2.resize(img,(160,320))
         reshaped_img = resize_img.reshape(1,160,320,3)
         
