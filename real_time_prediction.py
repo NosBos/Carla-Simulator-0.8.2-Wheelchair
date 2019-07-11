@@ -34,19 +34,14 @@ class RealTimePrediction:
         reshaped_img = resize_img.reshape(1,160,320,3)
         
         #reshape makes unsavable image, saving the img after resizing, before reshaping
-        ai_filename = 'Auto/episode{}.jpg'.format(self._AI_frame)
-        
-        #saves resized img to disk
-        cv2.imwrite(ai_filename,resize_img):
-        
+
+        self.current_image = resize_img
+
         return reshaped_img
        
     # Calling the model to do prediction
     def do_predict(self, img):   
         reshape_img = self.read_data(img)
-
-        self.current_image = reshape_img        
-
         self.predicted_value = self.model.predict(reshape_img)
         return self.predicted_value 
 

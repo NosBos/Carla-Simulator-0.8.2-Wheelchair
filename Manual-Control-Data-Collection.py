@@ -203,6 +203,7 @@ class CarlaGame(object):
         self._input_control = "Manual"
         self._AI_steer = 0
         self._player_start = args.start
+        self._ai_validation = args.checkai
 
     def execute(self):
         """Launch the PyGame."""
@@ -302,16 +303,24 @@ class CarlaGame(object):
  
                     #numpy array from simulator is BGR color-space, converting to RGB
                     rgb_img = cv2.cvtColor(measurement.data, cv2.COLOR_BGR2RGB)
+                    
 
-                    #call do_predict, gets steer values from real_time_prediction.py
-                    self._AI_steer = p.do_predict(rgb_img)
+                #call do_predict, gets steer values from real_time_prediction.py
+                self._AI_steer = p.do_predict(rgb_img)
 
+                #if AI validation is enabled in argeparse
+                if self._ai_validation:
 
-                    #Check to see what numpy array is being sent to the model
+                    #keep running count of frame for file name
+                    self._AI_frame += 1
+ 
+                    #set file name for AI validation storage location
+                    ai_filename = 'Auto/episode{}.jpg'.format(self._AI_frame)
 
-                    cv2.imwrite('Auto/episode{}.jpg'.format(self._AI_frame),rgb_img)
-                
-                self._AI_frame += 1
+                    #write image gotten from object of real_time_prediction.py after pre proccesing, before going into model
+                    cv2.imwrite(ai_filename,p.current_image)
+
+     
 
 
             #lap time is reset to allow this if statment to be called on accurate intervals
@@ -541,6 +550,11 @@ def main():
         default=1,
         type=int,
         help='Choose the starting postion of the simulator 1-152 (default: 1)')
+    argparser.add_argument(
+        '-c', '--checkai',
+        action='store_true',
+        help='enable autonomous mode data collection for validation')
+
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
