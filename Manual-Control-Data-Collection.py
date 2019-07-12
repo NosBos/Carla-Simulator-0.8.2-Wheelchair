@@ -315,10 +315,14 @@ class CarlaGame(object):
                     self._AI_frame += 1
  
                     #set file name for AI validation storage location
-                    ai_filename = 'Auto/episode{}.jpg'.format(self._AI_frame)
+
+                    
+                    #takes image after processing, puts steering wheel, saves to disk
+                    AI_validate(p.current_image,self._AI_steer,self._AI_frame)
+
 
                     #write image gotten from object of real_time_prediction.py after pre proccesing, before going into model
-                    cv2.imwrite(ai_filename,p.current_image)
+                    #cv2.imwrite(ai_filename,p.current_image)
 
      
 
@@ -504,6 +508,118 @@ class CarlaGame(object):
             self._display.blit(surface, (WINDOW_WIDTH, 0))
 
         pygame.display.flip()
+
+
+
+def AI_validate(img,steer,image_num):
+
+    coll = 0
+    vel = '00'
+    drive = '_NONE_'
+    axes5040=(50,40)   # top circle
+    #axes3020=(30, 20) # smaller half circle
+    axes4030=(40,30)   # lower half circle
+
+    axes3020=(100,100)
+    angle = 0
+    startAngle = 180
+    endAngle = 360
+    center = (80, 300)
+
+
+
+    #
+    # Constants: Color and thickness of lines
+    color=(255,255,255) # 
+    thickness, filled = 1, 1 # 1, -1
+    linetype = cv2.LINE_AA
+
+
+    #
+    # Draw 2 half circles
+    cv2.ellipse(img, center, axes5040, angle, startAngle, endAngle,color,thickness,linetype)
+    cv2.ellipse(img, center, axes4030, angle, startAngle, endAngle,color,filled),linetype
+    #cv2.ellipse(img, center, axes3020, angle, startAngle, endAngle, color, thickness)
+
+
+    leftline_start=(30,300)
+    leftline_end=(40, 300)
+    rightline_start=(120, 300)
+    rightline_end=(130, 300)
+    centerline_start=(80, 260)
+    centerline_end=(80, 270)
+    #
+
+
+
+    # Draw 3 lines
+    cv2.line(img,rightline_start, rightline_end,color,thickness,linetype)
+    cv2.line(img,leftline_start, leftline_end,color,thickness,linetype)
+    cv2.line(img,centerline_start, centerline_end,color,thickness,linetype)
+
+
+
+    #
+    # 2. Add the data as text
+    # ======================== 
+    # Constants - Text
+    # font = cv2.FONT_HERSHEY_SIMPLEX
+    """
+    font = cv2.FONT_HERSHEY_DUPLEX
+    font_scale = 0.30 # 0.25
+    textcolor= (0,0,0)
+    """
+    # Draw Text Fixed
+    """
+    cv2.putText(img,'L',(40,197), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'R',(160,197), font, font_scale, textcolor, thickness,linetype)
+    #cv2.putText(img,'STEERING',(86,197), font, font_scale, textcolor, thickness,linetype) 
+    """
+    #
+    # Draw Text Data to display variables inside the steering wheel
+    #   Add the text for variables: 
+    #         steer, probability of collision, velocity, drive command
+
+    """
+    cv2.putText(img,'{0:.2f}'.format(steer),(90,178), font,font_scale,
+             textcolor, thickness,linetype)
+    cv2.putText(img,'COL: {}%  VEL: {}'.format(int(coll*100), vel),(55,197), font,font_scale,
+             textcolor, thickness,linetype)
+    #cv2.putText(img, vel ,(115,197),font,font_scale, textcolor, thickness,linetype)
+    cv2.putText(img, drive,(86,188), font, font_scale, textcolor, thickness,linetype) 
+    """
+    
+    #
+    # 3. Add the graphical steering angle
+    # ====================================
+    #
+
+    #black
+    textcolor= (0,0,0)
+
+    steerAngleStraight=270
+
+    #turn angle of the car used in carla
+    car_turn_angle = 70
+
+    #angle of the turn calculated
+    steerAngle = steerAngleStraight + (steer * car_turn_angle)
+
+    #thickness of indicator of steering angle
+    steerthick=4
+
+    #attaining start and end angles based on steer angle and steerthickness
+    steerAngleStart = steerAngle - (steerthick / 2)
+    steerAngleEnd = steerAngle + (steerthick / 2)
+
+    #drawing black ellipse over large ellipse to show turn angle
+    cv2.ellipse(img, center, axes5040, angle, steerAngleStart, steerAngleEnd, 
+              textcolor, steerthick, linetype)
+
+    # cv2.circle(img,(100,100), 2, textcolor, -1)
+
+    cv2.imwrite('Auto/episode{}.jpg'.format(image_num),img)
+
 
 
 def main():
