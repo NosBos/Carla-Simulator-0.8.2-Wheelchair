@@ -48,6 +48,7 @@ import time
 import csv
 import pandas as pd
 import cv2
+import matplotlib.pyplot as plt
 
 try:
     import pygame
@@ -204,6 +205,8 @@ class CarlaGame(object):
         self._AI_steer = 0
         self._player_start = args.start
         self._ai_validation = args.checkai
+        self._realtimedisplay = args.realtime
+        self._rtdtoggle = False
 
     def execute(self):
         """Launch the PyGame."""
@@ -247,6 +250,8 @@ class CarlaGame(object):
         self.client.start_episode(player_start)
         self._timer = Timer()
         self._is_on_reverse = False
+
+            
 
     def _on_loop(self):
 
@@ -321,8 +326,20 @@ class CarlaGame(object):
                     AI_validate(p.current_image,self._AI_steer,self._AI_frame)
 
 
-                    #write image gotten from object of real_time_prediction.py after pre proccesing, before going into model
-                    #cv2.imwrite(ai_filename,p.current_image)
+                if self._realtimedisplay:
+                    if not self._rtdtoggle:
+                        rtdimg = p.current_image
+                        rtddisplay = plt.imshow(rtdimg)
+                        self._rtdtoggle = False
+
+                    rtdimg = p.current_image
+                    rtddisplay.set_data(rtdimg)
+                    plt.draw()
+                    plt.pause(0.00000000001)
+                        
+                    
+                    
+
 
      
 
@@ -670,6 +687,10 @@ def main():
         '-c', '--checkai',
         action='store_true',
         help='enable autonomous mode data collection for validation')
+    argparser.add_argument(
+        '-r', '--realtime',
+        action='store_true',
+        help='enable window displaying AI steering in real time')
 
     args = argparser.parse_args()
 
