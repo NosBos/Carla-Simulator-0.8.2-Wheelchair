@@ -132,11 +132,24 @@ def make_carla_settings(args):
     settings.randomize_seeds()
 
     #Camera type and placement is chosen
-    camera0 = sensor.Camera('CameraRGB')
+    camera0 = sensor.Camera('CameraCenter')
     camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
     camera0.set_position(2.0, 0.0, 1.4)
     camera0.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera0)
+    
+    camera1 = sensor.Camera('CameraRight')
+    camera1.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    camera1.set_position(2.0, 1.5, 1.4)
+    camera1.set_rotation(0.0, 0.0, 0.0)
+    settings.add_sensor(camera1)
+
+    camera2 = sensor.Camera('CameraLeft')
+    camera2.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    camera2.set_position(2.0, -1.5, 1.4)
+    camera2.set_rotation(0.0, 0.0, 0.0)
+    settings.add_sensor(camera2)
+    
 
     #if lidar is chosen, placement of it
     if args.lidar:
@@ -291,7 +304,7 @@ class CarlaGame(object):
                 self._frame = self._frame + 1 
                 
                 for name, measurement in sensor_data.items():
-                    filename = '_out/episode_{}'.format(self._frame)
+                    filename = '_out/{}/episode_{}'.format(name,self._frame)
               
                     measurement.save_to_disk(filename)    
                 
