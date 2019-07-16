@@ -278,7 +278,7 @@ class CarlaGame(object):
         measurements, sensor_data = self.client.read_data()
 
         #image for pygame is extracted
-        self._main_image = sensor_data.get('CameraRGB', None)
+        self._main_image = sensor_data.get('CameraCenter', None)
 
         #control is given by calling _get_keyboard_control function
         control = self._get_keyboard_control(pygame.key.get_pressed())
