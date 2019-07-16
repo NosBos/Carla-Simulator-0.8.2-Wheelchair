@@ -111,7 +111,7 @@ MINI_WINDOW_HEIGHT = 180
 #Create data.csv file / overwrites previously recorded data
 with open('data.csv', 'w',newline='') as f:
     w = csv.writer(f)
-    w.writerow(['Frame', 'Timestamp', 'Steering Angle', 'Speed', 'Throttle']) 
+    w.writerow(['Left Camera', 'Center Camera', 'Right Camera', 'Timestamp(secs)', 'Steering Angle', 'Speed(m/s)', 'Throttle']) 
 f.close()
 
 
@@ -304,12 +304,16 @@ class CarlaGame(object):
                 self._frame = self._frame + 1 
                 
                 for name, measurement in sensor_data.items():
-                    filename = '_out/{}/episode_{}'.format(name,self._frame)
+                    filename = '_out/{}/frame_{}'.format(name,self._frame)
               
                     measurement.save_to_disk(filename)    
                 
                 #row created for saving data to csv
-                row = ["_out/episode_" + str(self._frame), self._time_stamp, round(steer,7), round(speed, 3), round(throttle, 3)]
+                Left_Camera_Dir = "_out/CameraLeft/frame_" + str(self._frame)
+                Center_Camera_Dir = "_out/CameraCenter/frame_" + str(self._frame)
+                Right_Camera_Dir = "_out/CameraRight/frame_" + str(self._frame)
+
+                row = [Left_Camera_Dir, Center_Camera_Dir, Right_Camera_Dir, self._time_stamp, round(steer,7), round(speed, 3), round(throttle, 3)]
 
                 #csv file written to
                 with open('data.csv', 'a') as csvFile:
@@ -340,7 +344,7 @@ class CarlaGame(object):
                     
                     #takes image after processing, puts steering wheel, saves to disk
                     save_img = steering_overlay(p.current_image,self._AI_steer)
-                    cv2.imwrite('Auto/episode{}.jpg'.format(self._AI_frame),save_img)
+                    cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
                 #If real time display is enbaled from argeparse, this runs
                 if self._realtimedisplay:
@@ -421,8 +425,8 @@ class CarlaGame(object):
         elif self._input_control == "Replay":
 
             #read replay.csv file, _replay_frame values gives us correct row
-            control.steer = replay.iloc[self._replay_frame,2]
-            control.throttle = replay.iloc[self._replay_frame,4]
+            control.steer = replay.iloc[self._replay_frame,4]
+            control.throttle = replay.iloc[self._replay_frame,6]
 
         #input set to autonomous, steer values from model
         else:
