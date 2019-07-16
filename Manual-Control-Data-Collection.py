@@ -205,8 +205,11 @@ class CarlaGame(object):
         self._AI_steer = 0
         self._player_start = args.start
         self._ai_validation = args.checkai
+
+        #Real Time Display
         self._realtimedisplay = args.realtime
         self._rtdtoggle = False
+        self._rtddisplay = None
 
     def execute(self):
         """Launch the PyGame."""
@@ -323,17 +326,24 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    AI_validate(p.current_image,self._AI_steer,self._AI_frame)
+                    save_img = steering_overlay(p.current_image,self._AI_steer)
+                    cv2.imwrite('Auto/episode{}.jpg'.format(self._AI_frame),save_img)
 
 
                 if self._realtimedisplay:
                     if not self._rtdtoggle:
                         rtdimg = p.current_image
-                        rtddisplay = plt.imshow(rtdimg)
-                        self._rtdtoggle = False
+                        self._rtddisplay = plt.imshow(rtdimg)
+                        self._rtdtoggle = True
 
                     rtdimg = p.current_image
-                    rtddisplay.set_data(rtdimg)
+                    
+                    #test, this returns RGB img but .set_data returns BGR
+                    #cv2.imshow('test4',rtdimg)
+                    #cv2.waitKey(0)
+                    rtdimg = steering_overlay(rtdimg, self._AI_steer)
+
+                    self._rtddisplay.set_data(rtdimg)
                     plt.draw()
                     plt.pause(0.00000000001)
                         
@@ -528,7 +538,7 @@ class CarlaGame(object):
 
 
 
-def AI_validate(img,steer,image_num):
+def steering_overlay(img,steer):
 
     coll = 0
     vel = '00'
@@ -635,7 +645,7 @@ def AI_validate(img,steer,image_num):
 
     # cv2.circle(img,(100,100), 2, textcolor, -1)
 
-    cv2.imwrite('Auto/episode{}.jpg'.format(image_num),img)
+    return img
 
 
 
