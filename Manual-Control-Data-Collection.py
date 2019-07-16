@@ -329,20 +329,25 @@ class CarlaGame(object):
                     save_img = steering_overlay(p.current_image,self._AI_steer)
                     cv2.imwrite('Auto/episode{}.jpg'.format(self._AI_frame),save_img)
 
-
+                #If real time display is enbaled from argeparse, this runs
                 if self._realtimedisplay:
+
+                    #this code will only run once, creates the window for the real time display
                     if not self._rtdtoggle:
                         rtdimg = p.current_image
                         self._rtddisplay = plt.imshow(rtdimg)
                         self._rtdtoggle = True
 
+                    #the img going into the model is loaded in
                     rtdimg = p.current_image
-                    
+                    """
                     #test, this returns RGB img but .set_data returns BGR
                     #cv2.imshow('test4',rtdimg)
                     #cv2.waitKey(0)
+                    """
                     rtdimg = steering_overlay(rtdimg, self._AI_steer)
 
+                    #the existing window is updated with the new image
                     self._rtddisplay.set_data(rtdimg)
                     plt.draw()
                     plt.pause(0.00000000001)
