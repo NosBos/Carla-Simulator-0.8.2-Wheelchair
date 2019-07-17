@@ -68,6 +68,7 @@ try:
     from pygame.locals import K_b
     from pygame.locals import K_n
     from pygame.locals import K_m
+    from pygame.locals import K_k
 
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
@@ -219,6 +220,8 @@ class CarlaGame(object):
         self._AI_steer = 0
         self._player_start = args.start
         self._ai_validation = args.checkai
+
+        self._takeovers = 0
 
         #Real Time Display
         self._realtimedisplay = args.realtime
@@ -455,6 +458,11 @@ class CarlaGame(object):
         if keys[K_m]:
             print("Manual Control")
             self._input_control = "Manual"
+
+        if keys[K_k]:
+            print("Manual Control: Takeover Noted")
+            self._takeovers += 1
+            self._input_control = "Manual"        
 
         if keys[K_n]:
             print("AI Control")
