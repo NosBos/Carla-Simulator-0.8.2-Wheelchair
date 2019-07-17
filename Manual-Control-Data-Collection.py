@@ -132,6 +132,7 @@ def make_carla_settings(args):
     settings.randomize_seeds()
 
     #Camera type and placement is chosen
+    #comment out a camera block if not wanted
     camera0 = sensor.Camera('CameraCenter')
     camera0.set_image_size(WINDOW_WIDTH, WINDOW_HEIGHT)
     camera0.set_position(2.0, 0.0, 1.4)
@@ -149,7 +150,7 @@ def make_carla_settings(args):
     camera2.set_position(2.0, -1.5, 1.4)
     camera2.set_rotation(0.0, 0.0, 0.0)
     settings.add_sensor(camera2)
-    
+
 
     #if lidar is chosen, placement of it
     if args.lidar:
@@ -289,6 +290,19 @@ class CarlaGame(object):
         steer = Decimal(control.steer)
         throttle = Decimal(control.throttle)
 
+        """
+        #Calling AI model at all times to allow realtime display to show at all times
+        """
+        for name, measurement in sensor_data.items():
+ 
+            #numpy array from simulator is BGR color-space, converting to RGB
+            rgb_img = cv2.cvtColor(measurement.data, cv2.COLOR_BGR2RGB)
+                    
+
+        #call do_predict, gets steer values from real_time_prediction.py
+        self._AI_steer = p.do_predict(rgb_img)
+
+
         # Print measurements every chosen amount of time.
         if self._timer.elapsed_seconds_since_lap() > 0.033:
             #timestamp keeps track of how much time has elasped
@@ -324,14 +338,6 @@ class CarlaGame(object):
             #get steering direction from AI
             if self._input_control == "AI":
 
-                for name, measurement in sensor_data.items():
- 
-                    #numpy array from simulator is BGR color-space, converting to RGB
-                    rgb_img = cv2.cvtColor(measurement.data, cv2.COLOR_BGR2RGB)
-                    
-
-                #call do_predict, gets steer values from real_time_prediction.py
-                self._AI_steer = p.do_predict(rgb_img)
 
                 #if AI validation is enabled in argeparse
                 if self._ai_validation:
@@ -346,28 +352,28 @@ class CarlaGame(object):
                     save_img = steering_overlay(p.current_image,self._AI_steer)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
-                #If real time display is enbaled from argeparse, this runs
-                if self._realtimedisplay:
+            #If real time display is enbaled from argeparse, this runs
+            if self._realtimedisplay:
 
-                    #this code will only run once, creates the window for the real time display
-                    if not self._rtdtoggle:
-                        rtdimg = p.current_image
-                        self._rtddisplay = plt.imshow(rtdimg)
-                        self._rtdtoggle = True
-
-                    #the img going into the model is loaded in
+                #this code will only run once, creates the window for the real time display
+                if not self._rtdtoggle:
                     rtdimg = p.current_image
-                    """
-                    #test, this returns RGB img but .set_data returns BGR
-                    #cv2.imshow('test4',rtdimg)
-                    #cv2.waitKey(0)
-                    """
-                    rtdimg = steering_overlay(rtdimg, self._AI_steer)
+                    self._rtddisplay = plt.imshow(rtdimg)
+                    self._rtdtoggle = True
 
-                    #the existing window is updated with the new image
-                    self._rtddisplay.set_data(rtdimg)
-                    plt.draw()
-                    plt.pause(0.00000000001)
+                #the img going into the model is loaded in
+                rtdimg = p.current_image
+                """
+                #test, this returns RGB img but .set_data returns BGR
+                #cv2.imshow('test4',rtdimg)
+                #cv2.waitKey(0)
+                """
+                rtdimg = steering_overlay(rtdimg, self._AI_steer)
+
+                #the existing window is updated with the new image
+                self._rtddisplay.set_data(rtdimg)
+                plt.draw()
+                plt.pause(0.00000000001)
                         
                     
                     
@@ -573,9 +579,14 @@ def steering_overlay(img,steer):
     angle = 0
     startAngle = 180
     endAngle = 360
-    center = (80, 300)
 
+    p.x_image = x
+    p.y_image = y
 
+    x_center = int(x // 2)
+    y_center = int(y // 1.06)    
+
+    center = (x_center, y_center)
 
     #
     # Constants: Color and thickness of lines
@@ -591,12 +602,12 @@ def steering_overlay(img,steer):
     #cv2.ellipse(img, center, axes3020, angle, startAngle, endAngle, color, thickness)
 
 
-    leftline_start=(30,300)
-    leftline_end=(40, 300)
-    rightline_start=(120, 300)
-    rightline_end=(130, 300)
-    centerline_start=(80, 260)
-    centerline_end=(80, 270)
+    leftline_start=(x_center - 50, y_center)
+    leftline_end=(x_center - 40, y_center)
+    rightline_start=(x_center + 40, y_center)
+    rightline_end=(x_center + 50, y_center)
+    centerline_start=(x_center, y_center - 40)
+    centerline_end=(x_center, y_center - 30)
     #
 
 

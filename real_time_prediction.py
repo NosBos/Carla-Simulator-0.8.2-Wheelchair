@@ -14,6 +14,8 @@ class RealTimePrediction:
         self.predicted_value = None
         self.model = self.load_model()
         self.current_image = None
+		self.x_image = 160
+		self.y_image = 320
 
         print(type(self.model))
          
@@ -30,7 +32,7 @@ class RealTimePrediction:
     # Load data which we want to do prediction on it
     def read_data(self, img):
 
-        resize_img = cv2.resize(img,(160,320))
+        resize_img = cv2.resize(img,(self.x_image, y_image))
         reshaped_img = resize_img.reshape(1,160,320,3)
         
         #reshape makes unsavable image, saving the img after resizing, before reshaping
