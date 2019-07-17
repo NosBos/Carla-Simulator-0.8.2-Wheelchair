@@ -222,6 +222,7 @@ class CarlaGame(object):
         self._ai_validation = args.checkai
 
         self._takeovers = 0
+        self._distance = 0.01
 
         #Real Time Display
         self._realtimedisplay = args.realtime
@@ -307,9 +308,11 @@ class CarlaGame(object):
 
 
         # Print measurements every chosen amount of time.
-        if self._timer.elapsed_seconds_since_lap() > 0.033:
+        if self._timer.elapsed_seconds_since_lap() > 0.1:
             #timestamp keeps track of how much time has elasped
-            self._time_stamp = self._time_stamp + 0.033
+            self._time_stamp = self._time_stamp + 0.1
+
+            self._distance += measurements.player_measurements.forward_speed * 0.1
 
             #If input_control is replay, keeps track of frames read
             if self._input_control == "Replay":
@@ -352,7 +355,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(p.current_image,self._AI_steer, self._takeovers, self._time_stamp)
+                    save_img = steering_overlay(p.current_image,self._AI_steer, self._takeovers, self._time_stamp, self._distance)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
@@ -371,7 +374,7 @@ class CarlaGame(object):
                 #cv2.imshow('test4',rtdimg)
                 #cv2.waitKey(0)
                 """
-                rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp)
+                rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance)
 
                 #the existing window is updated with the new image
                 self._rtddisplay.set_data(rtdimg)
@@ -574,7 +577,7 @@ class CarlaGame(object):
 
 
 
-def steering_overlay(img,steer,takeovers, timestamp):
+def steering_overlay(img,steer,takeovers, timestamp, distance):
 
     coll = 0
     vel = '00'
@@ -599,6 +602,9 @@ def steering_overlay(img,steer,takeovers, timestamp):
 
     TakeoverPerTime = Decimal(takeovers / timestamp)
     TakeoverPerTime = round(TakeoverPerTime,2)
+
+    TakeoverPerDistance = Decimal(takeovers / distance)
+    TakeoverPerDistance = round(TakeoverPerDistance, 2)
 
     #
     # Constants: Color and thickness of lines
@@ -644,7 +650,8 @@ def steering_overlay(img,steer,takeovers, timestamp):
     # Draw Text Fixed
     
     cv2.putText(img,'T:{}'.format(takeovers),(10,10), font, font_scale, textcolor, thickness,linetype)
-    cv2.putText(img,'T/t:{}'.format(TakeoverPerTime),(x_center-20,10), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'T/t:{}'.format(TakeoverPerTime),(x_center-30,10), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'T/d:{}'.format(TakeoverPerDistance),(x-50,10), font, font_scale, textcolor, thickness,linetype)
     #cv2.putText(img,'STEERING',(86,197), font, font_scale, textcolor, thickness,linetype) 
     
     #
