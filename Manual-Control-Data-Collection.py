@@ -352,7 +352,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(p.current_image,self._AI_steer)
+                    save_img = steering_overlay(p.current_image,self._AI_steer, self._takeovers)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
@@ -371,7 +371,7 @@ class CarlaGame(object):
                 #cv2.imshow('test4',rtdimg)
                 #cv2.waitKey(0)
                 """
-                rtdimg = steering_overlay(rtdimg, self._AI_steer)
+                rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers)
 
                 #the existing window is updated with the new image
                 self._rtddisplay.set_data(rtdimg)
@@ -574,7 +574,7 @@ class CarlaGame(object):
 
 
 
-def steering_overlay(img,steer):
+def steering_overlay(img,steer,takeovers):
 
     coll = 0
     vel = '00'
@@ -587,9 +587,10 @@ def steering_overlay(img,steer):
     angle = 0
     startAngle = 180
     endAngle = 360
+    
 
-    p.x_image = x
-    p.y_image = y
+    x = p.x_image
+    y = p.y_image
 
     x_center = int(x // 2)
     y_center = int(y // 1.06)    
@@ -632,17 +633,17 @@ def steering_overlay(img,steer):
     # ======================== 
     # Constants - Text
     # font = cv2.FONT_HERSHEY_SIMPLEX
-    """
+    
     font = cv2.FONT_HERSHEY_DUPLEX
     font_scale = 0.30 # 0.25
     textcolor= (0,0,0)
-    """
+    
     # Draw Text Fixed
-    """
-    cv2.putText(img,'L',(40,197), font, font_scale, textcolor, thickness,linetype)
+    
+    cv2.putText(img,'T:{}'.format(takeovers),(10,10), font, font_scale, textcolor, thickness,linetype)
     cv2.putText(img,'R',(160,197), font, font_scale, textcolor, thickness,linetype)
     #cv2.putText(img,'STEERING',(86,197), font, font_scale, textcolor, thickness,linetype) 
-    """
+    
     #
     # Draw Text Data to display variables inside the steering wheel
     #   Add the text for variables: 
