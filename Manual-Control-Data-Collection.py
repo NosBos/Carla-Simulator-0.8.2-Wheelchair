@@ -352,7 +352,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(p.current_image,self._AI_steer, self._takeovers)
+                    save_img = steering_overlay(p.current_image,self._AI_steer, self._takeovers, self._time_stamp)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
@@ -371,7 +371,7 @@ class CarlaGame(object):
                 #cv2.imshow('test4',rtdimg)
                 #cv2.waitKey(0)
                 """
-                rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers)
+                rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp)
 
                 #the existing window is updated with the new image
                 self._rtddisplay.set_data(rtdimg)
@@ -574,7 +574,7 @@ class CarlaGame(object):
 
 
 
-def steering_overlay(img,steer,takeovers):
+def steering_overlay(img,steer,takeovers, timestamp):
 
     coll = 0
     vel = '00'
@@ -596,6 +596,9 @@ def steering_overlay(img,steer,takeovers):
     y_center = int(y // 1.06)    
 
     center = (x_center, y_center)
+
+    TakeoverPerTime = Decimal(takeovers / timestamp)
+    TakeoverPerTime = round(TakeoverPerTime,2)
 
     #
     # Constants: Color and thickness of lines
@@ -636,12 +639,12 @@ def steering_overlay(img,steer,takeovers):
     
     font = cv2.FONT_HERSHEY_DUPLEX
     font_scale = 0.30 # 0.25
-    textcolor= (0,0,0)
+    textcolor= (255,20,147)
     
     # Draw Text Fixed
     
     cv2.putText(img,'T:{}'.format(takeovers),(10,10), font, font_scale, textcolor, thickness,linetype)
-    cv2.putText(img,'R',(160,197), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'T/t:{}'.format(TakeoverPerTime),(x_center-20,10), font, font_scale, textcolor, thickness,linetype)
     #cv2.putText(img,'STEERING',(86,197), font, font_scale, textcolor, thickness,linetype) 
     
     #
