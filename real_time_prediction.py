@@ -13,8 +13,7 @@ class RealTimePrediction:
         self.model_weights = model_weights
         self.predicted_value = None
         self.model = self.load_model()
-        self.x_dim = 200
-        self.y_dim = 100
+
          
     # Load json file, create the model and load the weights
     def load_model(self):  

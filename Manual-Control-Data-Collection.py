@@ -361,7 +361,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(proccesed_image,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    save_img = steering_overlay(crop_img_image,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
