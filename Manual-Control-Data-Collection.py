@@ -94,10 +94,11 @@ from carla.util import print_over_same_line
 
 #import prediction file
 from real_time_prediction import RealTimePrediction
+from data_processing import *
 
 #Add file paths for the .h5 model and .json model weights
-model_name = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model.json'
-model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights.h5'
+model_name = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_july18.json'
+model_weights = '/home/gill/Carla/CARLA_0.8.2/PythonClient/Model/model_weights_july18.h5'
 
 #Initalizing the model object
 p = RealTimePrediction(model_name, model_weights)
@@ -218,6 +219,7 @@ class CarlaGame(object):
 
         self._input_control = "Manual"
         self._AI_steer = 0
+        self._Manual_steer = 0
         self._player_start = args.start
         self._ai_validation = args.checkai
 
@@ -228,6 +230,8 @@ class CarlaGame(object):
         self._realtimedisplay = args.realtime
         self._rtdtoggle = False
         self._rtddisplay = None
+        self.x_dim = 0
+        self.y_dim = 0
 
     def execute(self):
         """Launch the PyGame."""
@@ -305,6 +309,8 @@ class CarlaGame(object):
 
         #call do_predict, gets steer values from real_time_prediction.py
         self._AI_steer = p.do_predict(rgb_img)
+        crop_img = DataProcessing.crop_img(rgb_img)
+        self.y_dim, self.x_dim, channels = crop_img.shape
 
 
         # Print measurements every chosen amount of time.
@@ -355,7 +361,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(p.current_image,self._AI_steer, self._takeovers, self._time_stamp, self._distance)
+                    save_img = steering_overlay(proccesed_image,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
@@ -363,18 +369,21 @@ class CarlaGame(object):
 
                 #this code will only run once, creates the window for the real time display
                 if not self._rtdtoggle:
-                    rtdimg = p.current_image
+                    rtdimg = crop_img
                     self._rtddisplay = plt.imshow(rtdimg)
                     self._rtdtoggle = True
 
                 #the img going into the model is loaded in
-                rtdimg = p.current_image
+                rtdimg = crop_img
                 """
                 #test, this returns RGB img but .set_data returns BGR
                 #cv2.imshow('test4',rtdimg)
                 #cv2.waitKey(0)
                 """
-                rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance)
+                if self._input_control == "AI":
+                    rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                else:
+                    rtdimg = steering_overlay(rtdimg, self._Manual_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
 
                 #the existing window is updated with the new image
                 self._rtddisplay.set_data(rtdimg)
@@ -432,6 +441,8 @@ class CarlaGame(object):
             control.throttle = (joy.get_axis(5) + 1) / 2
 
             control.brake = (joy.get_axis(2) + 1) / 2
+
+            self._Manual_steer = control.steer
 
         #replay of previously recorded data
         elif self._input_control == "Replay":
@@ -577,14 +588,14 @@ class CarlaGame(object):
 
 
 
-def steering_overlay(img,steer,takeovers, timestamp, distance):
+def steering_overlay(img,steer,takeovers, timestamp, distance, x_dim, y_dim):
 
     coll = 0
     vel = '00'
     drive = '_NONE_'
-    axes5040=(50,40)   # top circle
+    axes5040=(80,70)   # top circle
     #axes3020=(30, 20) # smaller half circle
-    axes4030=(40,30)   # lower half circle
+    axes4030=(70,60)   # lower half circle
 
     axes3020=(100,100)
     angle = 0
@@ -592,8 +603,8 @@ def steering_overlay(img,steer,takeovers, timestamp, distance):
     endAngle = 360
     
 
-    x = p.x_image
-    y = p.y_image
+    x = x_dim
+    y = y_dim
 
     x_center = int(x // 2)
     y_center = int(y // 1.06)    
@@ -620,12 +631,12 @@ def steering_overlay(img,steer,takeovers, timestamp, distance):
     #cv2.ellipse(img, center, axes3020, angle, startAngle, endAngle, color, thickness)
 
 
-    leftline_start=(x_center - 50, y_center)
-    leftline_end=(x_center - 40, y_center)
-    rightline_start=(x_center + 40, y_center)
-    rightline_end=(x_center + 50, y_center)
-    centerline_start=(x_center, y_center - 40)
-    centerline_end=(x_center, y_center - 30)
+    leftline_start=(x_center - 80, y_center)
+    leftline_end=(x_center - 70, y_center)
+    rightline_start=(x_center + 70, y_center)
+    rightline_end=(x_center + 80, y_center)
+    centerline_start=(x_center, y_center - 70)
+    centerline_end=(x_center, y_center - 60)
     #
 
 
@@ -644,14 +655,14 @@ def steering_overlay(img,steer,takeovers, timestamp, distance):
     # font = cv2.FONT_HERSHEY_SIMPLEX
     
     font = cv2.FONT_HERSHEY_DUPLEX
-    font_scale = 0.30 # 0.25
+    font_scale = 0.8 # 0.25
     textcolor= (255,20,147)
     
     # Draw Text Fixed
     
-    cv2.putText(img,'T:{}'.format(takeovers),(10,10), font, font_scale, textcolor, thickness,linetype)
-    cv2.putText(img,'T/t:{}'.format(TakeoverPerTime),(x_center-30,10), font, font_scale, textcolor, thickness,linetype)
-    cv2.putText(img,'T/d:{}'.format(TakeoverPerDistance),(x-50,10), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'T:{}'.format(takeovers),(40,40), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'T/t:{}'.format(TakeoverPerTime),(x_center-70,40), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,'T/d:{}'.format(TakeoverPerDistance),(x-130,40), font, font_scale, textcolor, thickness,linetype)
     #cv2.putText(img,'STEERING',(86,197), font, font_scale, textcolor, thickness,linetype) 
     
     #
@@ -674,7 +685,7 @@ def steering_overlay(img,steer,takeovers, timestamp, distance):
     #
 
     #black
-    textcolor= (0,0,0)
+    textcolor= (255,0,0)
 
     steerAngleStraight=270
 
