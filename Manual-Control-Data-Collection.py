@@ -302,9 +302,11 @@ class CarlaGame(object):
         #Calling AI model at all times to allow realtime display to show at all times
         """
         for name, measurement in sensor_data.items():
- 
-            #numpy array from simulator is BGR color-space, converting to RGB
-            rgb_img = cv2.cvtColor(measurement.data, cv2.COLOR_BGR2RGB)
+
+            if name == 'CameraCenter':
+   
+                #numpy array from simulator is BGR color-space, converting to RGB
+                rgb_img = cv2.cvtColor(measurement.data, cv2.COLOR_BGR2RGB)
                     
 
         #call do_predict, gets steer values from real_time_prediction.py
@@ -361,7 +363,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(crop_img_image,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    save_img = steering_overlay(crop_img,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
