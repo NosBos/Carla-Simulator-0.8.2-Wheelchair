@@ -312,6 +312,8 @@ class CarlaGame(object):
         #call do_predict, gets steer values from real_time_prediction.py
         self._AI_steer = p.do_predict(rgb_img)
         crop_img = DataProcessing.crop_img(rgb_img)
+
+        #gets x and y dimensions of cropped image
         self.y_dim, self.x_dim, channels = crop_img.shape
 
 
@@ -368,11 +370,12 @@ class CarlaGame(object):
 
             #If real time display is enbaled from argeparse, this runs
             if self._realtimedisplay:
+                #set the gamma to change brightness diff between images in realtimedisplay
+                gamma = 0.4
 
                 #this code will only run once, creates the window for the real time display
                 if not self._rtdtoggle:
-                    rtdimg = crop_img
-                    self._rtddisplay = plt.imshow(rtdimg)
+                    self._rtddisplay = plt.imshow(rgb_img)
                     self._rtdtoggle = True
 
                 #the img going into the model is loaded in
@@ -383,9 +386,15 @@ class CarlaGame(object):
                 #cv2.waitKey(0)
                 """
                 if self._input_control == "AI":
-                    rtdimg = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    s_img = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    
+                    rtdimg = OneImageOnOther(s_img, rgb_img, gamma)
+
+                    
                 else:
-                    rtdimg = steering_overlay(rtdimg, self._Manual_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    s_img = steering_overlay(rtdimg, self._Manual_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+    
+                    rtdimg = OneImageOnOther(s_img, rgb_img, gamma)
 
                 #the existing window is updated with the new image
                 self._rtddisplay.set_data(rtdimg)
@@ -588,6 +597,29 @@ class CarlaGame(object):
 
         pygame.display.flip()
 
+
+def OneImageOnOther(s_img, l_img, gamma):
+
+    l_img = adjust_gamma(l_img,gamma)
+    
+    height, width, channels = l_img.shape
+    height2, width2, channels2 = s_img.shape
+    
+    y_offset = height-height2
+    x_offset = 0
+
+    l_img[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
+
+    return l_img
+
+
+def adjust_gamma(image, gamma):
+
+   invGamma = 1.0 / gamma
+   table = np.array([((i / 255.0) ** invGamma) * 255
+      for i in np.arange(0, 256)]).astype("uint8")
+
+   return cv2.LUT(image, table)
 
 
 def steering_overlay(img,steer,takeovers, timestamp, distance, x_dim, y_dim):
