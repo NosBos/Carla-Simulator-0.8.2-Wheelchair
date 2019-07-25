@@ -118,7 +118,7 @@ f.close()
 
 
 #opening replay csv file- uncomment if replay needed
-#replay = pd.read_csv("replay.csv")
+replay = pd.read_csv("replay.csv")
 
 #Carla setting are set
 def make_carla_settings(args):
@@ -297,7 +297,9 @@ class CarlaGame(object):
         #steer and throttle values extracted from control
         steer = Decimal(control.steer)
         throttle = Decimal(control.throttle)
-
+        
+        #set gamma value for realtimedisplay
+        gamma = 0.4
         """
         #Calling AI model at all times to allow realtime display to show at all times
         """
@@ -365,13 +367,13 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    save_img = steering_overlay(crop_img,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    s_img_save = steering_overlay(crop_img,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    save_img = OneImageOnOther(s_img_save, rgb_img, gamma)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
             #If real time display is enbaled from argeparse, this runs
             if self._realtimedisplay:
                 #set the gamma to change brightness diff between images in realtimedisplay
-                gamma = 0.4
 
                 #this code will only run once, creates the window for the real time display
                 if not self._rtdtoggle:
