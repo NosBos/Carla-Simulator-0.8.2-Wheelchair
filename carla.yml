@@ -25,3 +25,4 @@ dependencies:
         - requests
         - tensorflow==1.13.1
         - keras==2.2.4
+        - pygame==1.9.6
