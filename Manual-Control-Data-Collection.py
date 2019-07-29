@@ -367,7 +367,7 @@ class CarlaGame(object):
 
                     
                     #takes image after processing, puts steering wheel, saves to disk
-                    s_img_save = steering_overlay(crop_img,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    s_img_save = steering_overlay(crop_img,self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim, self._input_control)
                     save_img = OneImageOnOther(s_img_save, rgb_img, gamma)
                     cv2.imwrite('Auto/frame{}.jpg'.format(self._AI_frame),save_img)
 
@@ -388,13 +388,13 @@ class CarlaGame(object):
                 #cv2.waitKey(0)
                 """
                 if self._input_control == "AI":
-                    s_img = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    s_img = steering_overlay(rtdimg, self._AI_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim, self._input_control)
                     
                     rtdimg = OneImageOnOther(s_img, rgb_img, gamma)
 
                     
                 else:
-                    s_img = steering_overlay(rtdimg, self._Manual_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim)
+                    s_img = steering_overlay(rtdimg, self._Manual_steer, self._takeovers, self._time_stamp, self._distance, self.x_dim, self.y_dim, self._input_control)
     
                     rtdimg = OneImageOnOther(s_img, rgb_img, gamma)
 
@@ -608,7 +608,7 @@ def OneImageOnOther(s_img, l_img, gamma):
     height2, width2, channels2 = s_img.shape
     
     y_offset = height-height2
-    x_offset = 0
+    x_offset = (width - width2) // 2
 
     l_img[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
 
@@ -624,7 +624,7 @@ def adjust_gamma(image, gamma):
    return cv2.LUT(image, table)
 
 
-def steering_overlay(img,steer,takeovers, timestamp, distance, x_dim, y_dim):
+def steering_overlay(img,steer,takeovers, timestamp, distance, x_dim, y_dim, input_control):
 
     coll = 0
     vel = '00'
@@ -698,6 +698,7 @@ def steering_overlay(img,steer,takeovers, timestamp, distance, x_dim, y_dim):
     
     cv2.putText(img,'T:{}'.format(takeovers),(40,40), font, font_scale, textcolor, thickness,linetype)
     cv2.putText(img,'T/t:{}'.format(TakeoverPerTime),(x_center-70,40), font, font_scale, textcolor, thickness,linetype)
+    cv2.putText(img,input_control,(x_center-70,80), font, font_scale, textcolor, thickness,linetype)
     cv2.putText(img,'T/d:{}'.format(TakeoverPerDistance),(x-130,40), font, font_scale, textcolor, thickness,linetype)
     #cv2.putText(img,'STEERING',(86,197), font, font_scale, textcolor, thickness,linetype) 
     
