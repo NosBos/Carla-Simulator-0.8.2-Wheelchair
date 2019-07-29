@@ -1,0 +1,8 @@
+__pycache__/
+carla/
+_out/
+test/
+view_start_positions.py
+setup.py
+requirements.txt
+
