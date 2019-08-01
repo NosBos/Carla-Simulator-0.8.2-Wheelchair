@@ -78,11 +78,7 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
-#Controller Support
-pygame.init()
-pygame.joystick.init()
-joy = pygame.joystick.Joystick(0)
-joy.init()
+
 
 from carla import image_converter
 from carla import sensor
@@ -123,6 +119,7 @@ replay = pd.read_csv("replay.csv")
 #Carla setting are set
 def make_carla_settings(args):
     """Make a CarlaSettings object with the settings we need."""
+
     settings = CarlaSettings()
     settings.set(
         SynchronousMode=True,
@@ -222,6 +219,14 @@ class CarlaGame(object):
         self._Manual_steer = 0
         self._player_start = args.start
         self._ai_validation = args.checkai
+
+        #controller
+        self._xbox_cont = args.xboxcontroller
+        if args.xboxcontroller:
+            pygame.init()
+            pygame.joystick.init()
+            self._joystick = pygame.joystick.Joystick(0)
+            self._joystick.init()
 
         self._takeovers = 0
         self._distance = 0.01
@@ -444,19 +449,32 @@ class CarlaGame(object):
 
         #input set to manual
         if self._input_control == "Manual":
-            #updates and checks for input from controller
-            pygame.event.pump()
 
-            #get_axis values may differ depending on controller
-            #values weighted to be used on carla
-            control.steer = joy.get_axis(3)
+            if self._xbox_cont:
 
-            control.throttle = (joy.get_axis(5) + 1) / 2
+                #updates and checks for input from controller
+                pygame.event.pump()
 
-            control.brake = (joy.get_axis(2) + 1) / 2
+                #get_axis values may differ depending on controller
+                #values weighted to be used on carla
+                control.steer = self._joystick.get_axis(3)
+                print(control.steer)
 
-            self._Manual_steer = control.steer
+                control.throttle = (self._joystick.get_axis(5) + 1) / 2
 
+                control.brake = (self._joystick.get_axis(2) + 1) / 2
+
+                self._Manual_steer = control.steer
+
+            else:
+                if keys[K_LEFT] or keys[K_a]:
+                    control.steer = -1.0
+                if keys[K_RIGHT] or keys[K_d]:
+                    control.steer = 1.0
+                if keys[K_UP] or keys[K_w]:
+                    control.throttle = 1.0
+                if keys[K_DOWN] or keys[K_s]:
+                    control.brake = 1.0
         #replay of previously recorded data
         elif self._input_control == "Replay":
 
@@ -807,6 +825,10 @@ def main():
         '-r', '--realtime',
         action='store_true',
         help='enable window displaying AI steering in real time')
+    argparser.add_argument(
+        '-x', '--xboxcontroller',
+        action='store_true',
+        help='enable use of xbox controller')
 
     args = argparser.parse_args()
 
